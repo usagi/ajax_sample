@@ -1,0 +1,228 @@
+<!--
+  HTML5 charset pattern
+-->
+<meta charset="utf-8">
+
+<!--
+  GoogleがホスティングしているjQueryを利用する
+  参考:
+    公式(EN) https://developers.google.com/speed/libraries/
+    解説(JA) http://www.ajaxtower.jp/jquery/ini/index3.html
+    便利(EN) http://scriptsrc.net/
+-->
+<script
+  type="text/javascript"
+  src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+  ></script>
+
+<!--
+  jQueryによるAJAX利用のシンプルな例
+  解説:
+    window.onload にラムダ式でフックを設定し、
+    サーバーの /app1.php に対し、
+    適当に作った data ハッシュオブジェクトを
+    jQueryの $.get() にて、
+    コールバックにラムダ式を与えつつ送出している。
+    
+    $.get()はライブラリーの内部で XMLHttpRequest を使い、
+    呼び出し元のECMAScriptの実行とは非同期に
+    サーバーの /app1.php にHTTP/GETメソッドにて
+    コンテントを要求している。
+    
+    $get()の第3実引数に与えた関数オブジェクトは、
+    サーバーから応答が得られ次第、
+    この関数オブジェクトの第1引数に応答の本文を伴って
+    非同期に呼び出される。
+    
+    この仕組みによりウェブブラウザーは
+    ページ自体は一切切り替える事無く、
+    ECMAScriptだけで任意のサーバーのコンテントを、
+    そのページのHTMLの描画やECMAScriptの実行とは非同期に
+    取得できる。
+
+    しかもjQueryを使うとややこしいXMLHttpRequestなんて
+    まーったく触れないでもわりとあっさり使える。
+-->
+<script>
+// jQueryを使う場合は一般に、
+// window.onload = function(){...} の代わりに、
+// $(function(){...}); を使います。
+//   参考: http://semooh.jp/jquery/api/events/ready/fn/
+// ちなみに、「$ってなんやねん！」と思うかもしれませんが、
+// $が$じゃなくてabcだったら分かりますよね？
+//   var abc = function(...){...};
+//   abc(...);
+// さて、ここで$がPHPの様に特別な記号ではなくて、
+// シンボルに利用可能な単なる文字だとしたら？
+//   var $ = function(...){...};
+//   $(...);
+// まあ、そういうことだよヽ(´ー｀)ノ
+$(function()
+{
+  var data =
+  { command: 'hoge'
+  , param1 : 'fuga'
+  , param2 : 'piyo'
+  };
+  
+  $.get
+  ( "app.php" // 裏で非同期にこっそり送りつける先
+  , data      // 裏で非同期にこっそり送りつけるデータ
+  , function(value){
+      // ※この関数オブジェクトは応答が得られたら呼ばれてくれる
+      
+      // jQueryで表示用のDOMオブジェクトをidから拾っておく
+      // jQueryライブラリー内部では getElementById してる
+      var t_raw = $('#content_from_ajax_raw'    );
+      var t_dec = $('#content_from_ajax_decoded');
+      
+      // app1.phpから返って来た生のデータをそのまま表示
+      // .text はjQueryが取得するDOMオブジェクトの
+      // 内容のsetter兼getter。
+      //   参考: http://semooh.jp/jquery/api/attributes/text/_/ 
+      console.log(value);
+      t_raw.text(value);
+      
+      // JSONとしてパースして、
+      // ECMAScriptハッシュオブジェクトに復元して表示。
+      // ECMAScript側では言語組み込みのJSONオブジェクトを使う。
+      //   参考: http://v20.www.wonderrabbitproject.net/Lectures/JavaScript/0014/
+      // for-in文
+      //   参考: http://v20.www.wonderrabbitproject.net/Lectures/JavaScript/0006/#for-in文
+      var parsed_value = JSON.parse(value);
+      console.log(parsed_value);
+      for(var k in parsed_value)
+        t_dec.text
+        ( t_dec.text()
+        + k
+        + " : "
+        + parsed_value[k]
+        + "\n"
+        );
+    }
+  );
+});
+</script>
+
+<!--
+  もののついで、
+  「ボタンを押すとサーバーサイドで計算する電卓」
+  も作ったので参考にどうぞ。
+  （ごちゃごちゃしないように別ファイルに.jsまとめた）
+-->
+<script src="calc.js"></script>
+
+<!--
+  ここから実際に表示されるHTMLのbody相当
+  ちなみに、DOCTYPE宣言もhtmlタグもheadタグもbodyタグも
+  HTML5では省略可能なので書いて居ない。
+-->
+<h1>AJAX sample with jQuery</h1>
+<p>(1) .html/ECMASctipt --&gt; .php --&gt; .html/ECMAScript</p>
+<pre style="border: 1px solid red" id="content_from_ajax_raw"></pre>
+<p>(2) .html/ECMAScript JSON.parse() --&gt; for-in</p>
+<pre style="border: 1px solid red" id="content_from_ajax_decoded"></pre>
+
+<!--
+  ここから電卓ちゃんの表示部品
+  今回は気が向いたのでECMAScriptで全てDOMから生成とかせずに、
+  HTML要素はHTMLコードで書いておくよ・ｗ・
+-->
+<p>(3) calc</p>
+<div
+  style="border: 1px solid blue; position:relative; width:80px; height:90px"
+  id="calc"
+  >
+<pre
+  style="border: 1px solid black; position:absolute; width:60px; height:10px; bottom:80px; margin:0; text-align:right; padding:0 10px; font-size:10px"
+  id="calc_display"
+  >0</pre>
+<input
+  id="calc_ac"
+  type="button"
+  value="C"
+  style="position:absolute; width:20px; height:80px; bottom:0; left: 80px">
+<input
+  id="calc_0"
+  type="button"
+  value="0"
+  style="position:absolute; width:20px; height:20px; bottom:0">
+<input
+  id="calc_1"
+  type="button"
+  value="1"
+  style="position:absolute; width:20px; height:20px; bottom:20px">
+<input
+  id="calc_2"
+  type="button"
+  value="2"
+  style="position:absolute; width:20px; height:20px; bottom:20px; left:20px">
+<input
+  id="calc_3"
+  type="button"
+  value="3"
+  style="position:absolute; width:20px; height:20px; bottom:20px; left:40px">
+<input
+  id="calc_4"
+  type="button"
+  value="4"
+  style="position:absolute; width:20px; height:20px; bottom:40px;">
+<input
+  id="calc_5"
+  type="button"
+  value="5"
+  style="position:absolute; width:20px; height:20px; bottom:40px; left:20px">
+<input
+  id="calc_6"
+  type="button"
+  value="6"
+  style="position:absolute; width:20px; height:20px; bottom:40px; left:40px">
+<input
+  id="calc_7"
+  type="button"
+  value="7"
+  style="position:absolute; width:20px; height:20px; bottom:60px">
+<input
+  id="calc_8"
+  type="button"
+  value="8"
+  style="position:absolute; width:20px; height:20px; bottom:60px; left:20px">
+<input
+  id="calc_9"
+  type="button"
+  value="9"
+  style="position:absolute; width:20px; height:20px; bottom:60px; left:40px">
+<input
+  id="calc_dot"
+  type="button"
+  value="."
+  style="position:absolute; width:20px; height:20px; bottom:0; left:20px">
+<input
+  id="calc_eq"
+  type="button"
+  value="="
+  style="position:absolute; width:20px; height:20px; bottom:0; left:40px">
+<input
+  id="calc_add"
+  type="button"
+  value="＋"
+  style="position:absolute; width:20px; height:20px; bottom:0; left:60px">
+<input
+  id="calc_sub"
+  type="button"
+  value="ー"
+  style="position:absolute; width:20px; height:20px; bottom:20px; left:60px">
+<input
+  id="calc_mul"
+  type="button"
+  value="×"
+  style="position:absolute; width:20px; height:20px; bottom:40px; left:60px">
+<input
+  id="calc_div"
+  type="button"
+  value="÷"
+  style="position:absolute; width:20px; height:20px; bottom:60px; left:60px">
+</div>
+
+<hr>
+&copy;2013 Wonder Rabbit Project / Usagi Ito. License is CC0.
