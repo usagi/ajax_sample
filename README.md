@@ -1,4 +1,4 @@
-# AJAX sample
+# AJAX sample with jQuery
 
 ## これなーに
 
